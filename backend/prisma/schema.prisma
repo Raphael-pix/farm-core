@@ -27,6 +27,13 @@ model Farm {
   medicalRecords   MedicalRecord[]
   breedingEvents   BreedingEvent[]
   mortalities      Mortality[]
+  feeds            Feed[]
+  feedInventories  FeedInventory[]
+  feedConsumptions FeedConsumption[]
+  feedAllocations  FeedAllocation[]
+  tasks            Task[]
+  taskCompletions  TaskCompletion[]
+  taskTemplates    TaskTemplate[]
 
   @@index([slug])
   @@map("farms")
@@ -45,16 +52,25 @@ model User {
   farm   Farm?   @relation(fields: [farmId], references: [id], onDelete: SetNull)
   farmId String? @map("farm_id") @db.Uuid
 
-  fieldImages    FieldImage[]
-  fieldUpdates   FieldUpdate[]   @relation("AgentUpdates")
-  assignedFields Field[]         @relation("AgentFields")
-  updatedFields  Field[]         @relation("FieldUpdatedBy")
-  notifications  Notification[]
-  animalsCreated Animal[]        @relation("AnimalCreatedBy")
-  animalsUpdated Animal[]        @relation("AnimalUpdatedBy")
-  medicalRecords MedicalRecord[] @relation("MedicalRecordRecordedBy")
-  breedingEvents BreedingEvent[] @relation("BreedingEventRecordedBy")
-  mortalities    Mortality[]     @relation("MortalityRecordedBy")
+  fieldImages           FieldImage[]
+  fieldUpdates          FieldUpdate[]     @relation("AgentUpdates")
+  assignedFields        Field[]           @relation("AgentFields")
+  updatedFields         Field[]           @relation("FieldUpdatedBy")
+  notifications         Notification[]
+  animalsCreated        Animal[]          @relation("AnimalCreatedBy")
+  animalsUpdated        Animal[]          @relation("AnimalUpdatedBy")
+  medicalRecords        MedicalRecord[]   @relation("MedicalRecordRecordedBy")
+  breedingEvents        BreedingEvent[]   @relation("BreedingEventRecordedBy")
+  mortalities           Mortality[]       @relation("MortalityRecordedBy")
+  feedCreated           Feed[]            @relation("FeedCreatedBy")
+  feedUpdated           Feed[]            @relation("FeedUpdatedBy")
+  feedInventoryUpdated  FeedInventory[]   @relation("FeedInventoryUpdatedBy")
+  feedConsumptions      FeedConsumption[] @relation("FeedConsumptionRecordedBy")
+  tasksAssigned         Task[]            @relation("TaskAssignedTo")
+  tasksCreated          Task[]            @relation("TaskCreatedBy")
+  tasksUpdated          Task[]            @relation("TaskUpdatedBy")
+  taskCompletions       TaskCompletion[]  @relation("TaskCompletedBy")
+  taskTemplatesAssigned TaskTemplate[]    @relation("TaskTemplateAssignedTo")
 
   @@index([role])
   @@map("users")
@@ -107,6 +123,7 @@ model Field {
   images        FieldImage[]
   updates       FieldUpdate[]
   notifications Notification[]
+  tasks         Task[]
 
   @@index([agentId])
   @@index([agentId, isArchived])
@@ -231,6 +248,8 @@ model Animal {
   breedingEventsMale   BreedingEvent[]  @relation("BreedingEventMale")
   breedingEventsFemale BreedingEvent[]  @relation("BreedingEventFemale")
   mortalities          Mortality[]
+  feedAllocations      FeedAllocation[]
+  tasks                Task[]
 
   @@index([farmId])
   @@index([farmId, status])
@@ -378,6 +397,233 @@ model Mortality {
   @@map("mortalities")
 }
 
+model Feed {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  type        FeedType
+  description String?
+  unit        FeedUnit
+
+  costPerUnit Float?
+  supplier    String?
+
+  lowStockThreshold Float?
+  criticalThreshold Float?
+
+  isActive Boolean @default(true) @map("is_active")
+
+  farmId String @map("farm_id") @db.Uuid
+  farm   Farm   @relation(fields: [farmId], references: [id], onDelete: Cascade)
+
+  createdById String?  @map("created_by_id") @db.Uuid
+  createdBy   User?    @relation("FeedCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  updatedById String?  @map("updated_by_id") @db.Uuid
+  updatedBy   User?    @relation("FeedUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  inventories  FeedInventory[]
+  consumptions FeedConsumption[]
+  allocations  FeedAllocation[]
+
+  @@index([farmId])
+  @@index([farmId, isActive])
+  @@map("feeds")
+}
+
+model FeedInventory {
+  id           String   @id @default(uuid()) @db.Uuid
+  currentLevel Float    @map("current_level")
+  unit         FeedUnit
+
+  location          String?
+  lastUpdatedAt     DateTime? @map("last_updated_at")
+  lastUpdatedReason String?   @map("last_updated_reason")
+
+  status InventoryStatus @default(ADEQUATE)
+
+  farmId String @map("farm_id") @db.Uuid
+  farm   Farm   @relation(fields: [farmId], references: [id], onDelete: Cascade)
+
+  feedId String @map("feed_id") @db.Uuid
+  feed   Feed   @relation(fields: [feedId], references: [id], onDelete: Cascade)
+
+  updatedById String?  @map("updated_by_id") @db.Uuid
+  updatedBy   User?    @relation("FeedInventoryUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@unique([farmId, feedId])
+  @@index([farmId, status])
+  @@index([farmId, currentLevel])
+  @@map("feed_inventories")
+}
+
+model FeedConsumption {
+  id String @id @default(uuid()) @db.Uuid
+
+  farmId String @map("farm_id") @db.Uuid
+  farm   Farm   @relation(fields: [farmId], references: [id], onDelete: Cascade)
+
+  feedId String @map("feed_id") @db.Uuid
+  feed   Feed   @relation(fields: [feedId], references: [id], onDelete: Cascade)
+
+  quantity Float
+  unit     FeedUnit
+
+  observedAt DateTime @map("observed_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  notes       String?
+  temperature Float?
+
+  animalAllocations FeedAllocation[]
+
+  recordedById String? @map("recorded_by_id") @db.Uuid
+  recordedBy   User?   @relation("FeedConsumptionRecordedBy", fields: [recordedById], references: [id], onDelete: SetNull)
+
+  @@index([farmId, feedId])
+  @@index([farmId, observedAt(sort: Desc)])
+  @@index([feedId, observedAt])
+  @@map("feed_consumptions")
+}
+
+model FeedAllocation {
+  id String @id @default(uuid()) @db.Uuid
+
+  farmId String @map("farm_id") @db.Uuid
+  farm   Farm   @relation(fields: [farmId], references: [id], onDelete: Cascade)
+
+  consumptionId String          @map("consumption_id") @db.Uuid
+  consumption   FeedConsumption @relation(fields: [consumptionId], references: [id], onDelete: Cascade)
+
+  feedId String @map("feed_id") @db.Uuid
+  feed   Feed   @relation(fields: [feedId], references: [id], onDelete: Cascade)
+
+  animalId String? @map("animal_id") @db.Uuid
+  animal   Animal? @relation(fields: [animalId], references: [id], onDelete: SetNull)
+
+  quantityAllocated Float @map("quantity_allocated")
+
+  notes String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([farmId, animalId])
+  @@index([consumptionId])
+  @@map("feed_allocations")
+}
+
+model Task {
+  id String @id @default(uuid()) @db.Uuid
+
+  farmId String @map("farm_id") @db.Uuid
+  farm   Farm   @relation(fields: [farmId], references: [id], onDelete: Cascade)
+
+  type     TaskType
+  status   TaskStatus   @default(PENDING)
+  priority TaskPriority @default(NORMAL)
+
+  title       String
+  description String?
+
+  assignedToId String? @map("assigned_to_id") @db.Uuid
+  assignedTo   User?   @relation("TaskAssignedTo", fields: [assignedToId], references: [id], onDelete: SetNull)
+
+  dueDate             DateTime @map("due_date")
+  dueDateNotification Boolean  @default(true) @map("due_date_notification")
+
+  startDate   DateTime? @map("start_date")
+  completedAt DateTime? @map("completed_at")
+  missedAt    DateTime? @map("missed_at")
+
+  animalId String? @map("animal_id") @db.Uuid
+  animal   Animal? @relation(fields: [animalId], references: [id], onDelete: SetNull)
+
+  fieldId String? @map("field_id") @db.Uuid
+  field   Field?  @relation(fields: [fieldId], references: [id], onDelete: SetNull)
+
+  medicalRecordId String? @map("medical_record_id") @db.Uuid
+  breedingEventId String? @map("breeding_event_id") @db.Uuid
+
+  isRecurring       Boolean   @default(false) @map("is_recurring")
+  recurrencePattern String?   @map("recurrence_pattern")
+  recurrenceEndDate DateTime? @map("recurrence_end_date")
+
+  notes           String?
+  completionNotes String? @map("completion_notes")
+
+  createdById String?  @map("created_by_id") @db.Uuid
+  createdBy   User?    @relation("TaskCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  updatedById String?  @map("updated_by_id") @db.Uuid
+  updatedBy   User?    @relation("TaskUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  completions TaskCompletion[]
+
+  @@index([farmId])
+  @@index([farmId, status])
+  @@index([farmId, dueDate])
+  @@index([assignedToId, status])
+  @@index([farmId, type, status])
+  @@index([animalId])
+  @@index([fieldId])
+  @@map("tasks")
+}
+
+model TaskCompletion {
+  id String @id @default(uuid()) @db.Uuid
+
+  farmId String @map("farm_id") @db.Uuid
+  farm   Farm   @relation(fields: [farmId], references: [id], onDelete: Cascade)
+
+  taskId String @map("task_id") @db.Uuid
+  task   Task   @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  completedAt DateTime @map("completed_at")
+
+  notes    String?
+  evidence String?
+
+  completedById String @map("completed_by_id") @db.Uuid
+  completedBy   User   @relation("TaskCompletedBy", fields: [completedById], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([farmId, taskId])
+  @@index([taskId])
+  @@index([completedAt])
+  @@map("task_completions")
+}
+
+model TaskTemplate {
+  id     String @id @default(uuid()) @db.Uuid
+  farmId String @map("farm_id") @db.Uuid
+  farm   Farm   @relation(fields: [farmId], references: [id], onDelete: Cascade)
+
+  name        String
+  description String?
+  type        TaskType
+  priority    TaskPriority @default(NORMAL)
+
+  defaultAssignedToId String? @map("default_assigned_to_id") @db.Uuid
+  defaultAssignedTo   User?   @relation("TaskTemplateAssignedTo", fields: [defaultAssignedToId], references: [id], onDelete: SetNull)
+
+  recurrencePattern String  @map("recurrence_pattern")
+  daysOfWeek        String? @map("days_of_week")
+  dayOfMonth        Int?    @map("day_of_month")
+
+  isActive Boolean @default(true) @map("is_active")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@index([farmId, isActive])
+  @@map("task_templates")
+}
+
 enum Role {
   ADMIN
   AGENT
@@ -468,4 +714,68 @@ enum DeathCause {
   UNKNOWN
   EUTHANASIA
   OTHER
+}
+
+enum FeedType {
+  GRAIN
+  HAY
+  SILAGE
+  PELLETS
+  SUPPLEMENTS
+  PASTURE
+  OTHER
+}
+
+enum FeedUnit {
+  KG
+  TONNES
+  LITRES
+  BAGS
+  BALES
+  BUNDLES
+  OTHER
+}
+
+enum InventoryStatus {
+  ADEQUATE
+  LOW
+  CRITICAL
+  OUT_OF_STOCK
+  OVERSTOCKED
+}
+
+enum TaskType {
+  VACCINATION
+  HEALTH_CHECK
+  MEDICATION
+  BREEDING_MONITOR
+  LABOR_MONITOR
+
+  FEED_PROCUREMENT
+  FEED_DISTRIBUTION
+  INVENTORY_CHECK
+
+  FIELD_INSPECTION
+  CROP_HARVEST
+  PLANTING
+
+  MAINTENANCE
+  CLEANING
+  OTHER
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  MISSED
+  OVERDUE
+  CANCELLED
+}
+
+enum TaskPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
 }

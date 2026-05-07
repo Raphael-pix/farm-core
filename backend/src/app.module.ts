@@ -18,6 +18,8 @@ import { FarmsModule } from './farms/farms.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { HealthModule } from './health/health.module';
 import { LivestockModule } from './livestock/livestock.module';
+import { FeedModule } from './feed/feed.module';
+import { TaskModule } from './task/task.module';
 
 @Module({
   imports: [
@@ -75,6 +77,10 @@ import { LivestockModule } from './livestock/livestock.module';
     HealthModule,
 
     LivestockModule,
+
+    FeedModule,
+
+    TaskModule,
   ],
   controllers: [AppController],
   providers: [AppService],

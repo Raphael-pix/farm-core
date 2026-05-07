@@ -66,7 +66,13 @@ export class LivestockService {
     dto: RecordMedicalEventDto,
     user: JwtUser,
   ) {
-    return this.medicalRecords.record(animalId, dto, user.farmId, user.id);
+    const medical = await this.medicalRecords.record(
+      animalId,
+      dto,
+      user.farmId,
+      user.id,
+    );
+    return medical;
   }
 
   async getMedicalHistory(animalId: string, user: JwtUser) {
