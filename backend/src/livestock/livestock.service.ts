@@ -3,7 +3,6 @@ import { Species, AnimalStatus } from 'generated/prisma/enums';
 
 import { PrismaService } from '@/prisma/prisma.service';
 import { JwtUser } from '@/auth/types/request-user.type';
-import { NotificationsService } from '@/notifications/notifications.service';
 
 import { RegisterAnimalDto } from './dto/register-animal.dto';
 import { UpdateAnimalDto } from './dto/update-animal.dto';
@@ -23,7 +22,6 @@ export class LivestockService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly notificationsService: NotificationsService,
     private readonly animalRegistry: AnimalRegistryService,
     private readonly medicalRecords: MedicalRecordsService,
     private readonly breeding: BreedingService,

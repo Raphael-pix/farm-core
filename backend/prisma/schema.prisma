@@ -640,6 +640,7 @@ enum NotificationType {
   FIELD_AT_RISK
   FIELD_COMPLETED
   FIELD_ASSIGNED
+  FEED_LOW_STOCK
 }
 
 enum Species {
