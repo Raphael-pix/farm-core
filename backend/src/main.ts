@@ -67,9 +67,7 @@ async function bootstrap() {
 
   const port = config.get('app.port', { infer: true });
   await app.listen(port);
-  console.log(
-    `\n🌱 SmartSeason API running on http://localhost:${port}/api/v1`,
-  );
+  console.log(`\n🌱 Farm Core API running on http://localhost:${port}/api/v1`);
   console.log(`📚 Swagger docs at  http://localhost:${port}/api/docs\n`);
 }
 

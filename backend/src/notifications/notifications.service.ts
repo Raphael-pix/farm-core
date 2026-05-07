@@ -219,7 +219,7 @@ export class NotificationsService {
   async hasRecentAtRiskNotification(
     fieldId: string,
     farmId: string,
-    hoursThreshold = 24,
+    hoursThreshold = 72,
   ): Promise<boolean> {
     const recent = await this.prisma.notification.findFirst({
       where: {
