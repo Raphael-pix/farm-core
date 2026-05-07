@@ -1,0 +1,471 @@
+generator client {
+  provider        = "prisma-client"
+  output          = "../generated/prisma"
+  previewFeatures = ["partialIndexes"]
+  moduleFormat    = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Farm {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String
+  slug        String   @unique
+  description String?
+  inviteCode  String   @unique @map("invite_code")
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  users            User[]
+  fields           Field[]
+  notifications    Notification[]
+  animals          Animal[]
+  animalIdentities AnimalIdentity[]
+  medicalRecords   MedicalRecord[]
+  breedingEvents   BreedingEvent[]
+  mortalities      Mortality[]
+
+  @@index([slug])
+  @@map("farms")
+}
+
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String   @unique
+  role      Role     @default(AGENT)
+  fullName  String?  @map("full_name")
+  phone     String?
+  isActive  Boolean  @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  farm   Farm?   @relation(fields: [farmId], references: [id], onDelete: SetNull)
+  farmId String? @map("farm_id") @db.Uuid
+
+  fieldImages    FieldImage[]
+  fieldUpdates   FieldUpdate[]   @relation("AgentUpdates")
+  assignedFields Field[]         @relation("AgentFields")
+  updatedFields  Field[]         @relation("FieldUpdatedBy")
+  notifications  Notification[]
+  animalsCreated Animal[]        @relation("AnimalCreatedBy")
+  animalsUpdated Animal[]        @relation("AnimalUpdatedBy")
+  medicalRecords MedicalRecord[] @relation("MedicalRecordRecordedBy")
+  breedingEvents BreedingEvent[] @relation("BreedingEventRecordedBy")
+  mortalities    Mortality[]     @relation("MortalityRecordedBy")
+
+  @@index([role])
+  @@map("users")
+}
+
+model Location {
+  id        String   @id @default(uuid()) @db.Uuid
+  county    String
+  subCounty String?  @map("sub_county")
+  ward      String?
+  latitude  Float?
+  longitude Float?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  field   Field?
+  animals Animal[]
+
+  @@index([county])
+  @@index([county], map: "idx_locations_county")
+  @@map("locations")
+}
+
+model Field {
+  id            String    @id @default(uuid()) @db.Uuid
+  name          String
+  cropType      String    @map("crop_type")
+  plantingDate  DateTime  @map("planting_date")
+  currentStage  CropStage @default(PLANTED) @map("current_stage")
+  description   String?
+  areaSize      Float?    @map("area_size")
+  coverImageUrl String?   @map("cover_image_url")
+  lastUpdatedAt DateTime? @map("last_updated_at")
+  isArchived    Boolean   @default(false) @map("is_archived")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  agentId String? @map("agent_id") @db.Uuid
+  agent   User?   @relation("AgentFields", fields: [agentId], references: [id])
+
+  locationId String   @unique @map("location_id") @db.Uuid
+  location   Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  updatedById String? @map("updated_by_id") @db.Uuid
+  updatedBy   User?   @relation("FieldUpdatedBy", fields: [updatedById], references: [id])
+
+  farm   Farm   @relation(fields: [farmId], references: [id])
+  farmId String @map("farm_id") @db.Uuid
+
+  images        FieldImage[]
+  updates       FieldUpdate[]
+  notifications Notification[]
+
+  @@index([agentId])
+  @@index([agentId, isArchived])
+  @@index([currentStage])
+  @@index([isArchived])
+  @@index([plantingDate])
+  @@index([lastUpdatedAt])
+  @@index([agentId], map: "idx_fields_agent_active", where: raw("(is_archived = false)"))
+  @@index([currentStage], map: "idx_fields_stage_active", where: raw("(is_archived = false)"))
+  @@map("fields")
+}
+
+model FieldUpdate {
+  id         String    @id @default(uuid()) @db.Uuid
+  stage      CropStage
+  notes      String?
+  imageUrl   String?   @map("image_url")
+  observedAt DateTime  @map("observed_at")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  agentId String @map("agent_id") @db.Uuid
+  agent   User   @relation("AgentUpdates", fields: [agentId], references: [id], onDelete: Cascade)
+
+  fieldId String @map("field_id") @db.Uuid
+  field   Field  @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+
+  @@index([fieldId, observedAt(sort: Desc)])
+  @@index([agentId])
+  @@index([observedAt])
+  @@index([fieldId, observedAt(sort: Desc)], map: "idx_field_updates_field_observed")
+  @@map("field_updates")
+}
+
+model FieldImage {
+  id        String   @id @default(uuid()) @db.Uuid
+  url       String
+  caption   String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  fieldId String @map("field_id") @db.Uuid
+  field   Field  @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+
+  uploadedById String? @map("uploaded_by_id") @db.Uuid
+  uploadedBy   User?   @relation(fields: [uploadedById], references: [id])
+
+  @@index([fieldId])
+  @@index([uploadedById])
+  @@map("field_images")
+}
+
+model Notification {
+  id        String           @id @default(uuid()) @db.Uuid
+  type      NotificationType
+  title     String
+  message   String
+  metadata  Json?
+  isRead    Boolean          @default(false) @map("is_read")
+  readAt    DateTime?        @map("read_at")
+  createdAt DateTime         @default(now()) @map("created_at")
+  updatedAt DateTime         @updatedAt @map("updated_at")
+
+  userId String @map("user_id") @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  fieldId String? @map("field_id") @db.Uuid
+  field   Field?  @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+
+  farmId String @map("farm_id") @db.Uuid
+  farm   Farm   @relation(fields: [farmId], references: [id], onDelete: Cascade)
+
+  @@index([userId, farmId, createdAt(sort: Desc)])
+  @@index([userId, isRead])
+  @@index([farmId, createdAt(sort: Desc)])
+  @@map("notifications")
+}
+
+model Animal {
+  id      String  @id @default(uuid()) @db.Uuid
+  name    String?
+  species Species
+  breed   String?
+
+  sex             Sex
+  dateOfBirth     DateTime?    @map("date_of_birth")
+  acquiredDate    DateTime?    @map("acquired_date")
+  status          AnimalStatus @default(ACTIVE)
+  statusChangedAt DateTime?    @map("status_changed_at")
+  statusReason    String?      @map("status_reason")
+
+  color      String?
+  weight     Float?
+  weightUnit String? @default("kg") @map("weight_unit")
+  height     Float?
+  notes      String?
+
+  farmId String @map("farm_id") @db.Uuid
+  farm   Farm   @relation(fields: [farmId], references: [id], onDelete: Cascade)
+
+  locationId String?   @map("location_id") @db.Uuid
+  location   Location? @relation(fields: [locationId], references: [id], onDelete: SetNull)
+
+  maleParentId String? @map("male_parent_id") @db.Uuid
+  maleParent   Animal? @relation("OffspringFromMale", fields: [maleParentId], references: [id], onDelete: SetNull)
+
+  femaleParentId String? @map("female_parent_id") @db.Uuid
+  femaleParent   Animal? @relation("OffspringFromFemale", fields: [femaleParentId], references: [id], onDelete: SetNull)
+
+  maleOffspring   Animal[] @relation("OffspringFromMale")
+  femaleOffspring Animal[] @relation("OffspringFromFemale")
+
+  createdById String?  @map("created_by_id") @db.Uuid
+  createdBy   User?    @relation("AnimalCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  updatedById String?  @map("updated_by_id") @db.Uuid
+  updatedBy   User?    @relation("AnimalUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  identities           AnimalIdentity[]
+  medicalRecords       MedicalRecord[]
+  breedingEvents       BreedingEvent[]
+  breedingEventsMale   BreedingEvent[]  @relation("BreedingEventMale")
+  breedingEventsFemale BreedingEvent[]  @relation("BreedingEventFemale")
+  mortalities          Mortality[]
+
+  @@index([farmId])
+  @@index([farmId, status])
+  @@index([farmId, species])
+  @@index([farmId, createdAt])
+  @@map("animals")
+}
+
+model AnimalIdentity {
+  id    String             @id @default(uuid()) @db.Uuid
+  type  AnimalIdentityType
+  value String
+
+  isActive  Boolean   @default(true) @map("is_active")
+  issuedAt  DateTime  @map("issued_at")
+  revokedAt DateTime? @map("revoked_at")
+
+  notes String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  farmId String @map("farm_id") @db.Uuid
+  farm   Farm   @relation(fields: [farmId], references: [id], onDelete: Cascade)
+
+  animalId String @map("animal_id") @db.Uuid
+  animal   Animal @relation(fields: [animalId], references: [id], onDelete: Cascade)
+
+  @@unique([farmId, type, value])
+  @@index([farmId, animalId])
+  @@index([farmId, type, value])
+  @@map("animal_identities")
+}
+
+model MedicalRecord {
+  id     String           @id @default(uuid()) @db.Uuid
+  type   MedicalEventType
+  status MedicalStatus    @default(COMPLETED)
+
+  title       String
+  description String?
+  diagnosis   String?
+  treatment   String?
+
+  medication String?
+  dosage     Float?
+  doseUnit   String?
+  frequency  String?
+  duration   String?
+
+  veterinarianName String? @map("veterinarian_name")
+  clinicName       String? @map("clinic_name")
+
+  scheduledFor DateTime? @map("scheduled_for")
+  completedAt  DateTime? @map("completed_at")
+
+  estimatedCost Float? @map("estimated_cost")
+  actualCost    Float? @map("actual_cost")
+
+  notes String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  farmId String @map("farm_id") @db.Uuid
+  farm   Farm   @relation(fields: [farmId], references: [id], onDelete: Cascade)
+
+  animalId String @map("animal_id") @db.Uuid
+  animal   Animal @relation(fields: [animalId], references: [id], onDelete: Cascade)
+
+  recordedById String? @map("recorded_by_id") @db.Uuid
+  recordedBy   User?   @relation("MedicalRecordRecordedBy", fields: [recordedById], references: [id], onDelete: SetNull)
+
+  @@index([farmId, animalId])
+  @@index([farmId, type])
+  @@index([farmId, createdAt])
+  @@index([farmId, status])
+  @@map("medical_records")
+}
+
+model BreedingEvent {
+  id     String         @id @default(uuid()) @db.Uuid
+  status BreedingStatus @default(PLANNED)
+
+  plannedDate       DateTime? @map("planned_date")
+  matedDate         DateTime? @map("mated_date")
+  expectedBirthDate DateTime? @map("expected_birth_date")
+  actualBirthDate   DateTime? @map("actual_birth_date")
+
+  numberOfOffspring Int?    @map("number_of_offspring")
+  offspringNotes    String? @map("offspring_notes")
+
+  notes String?
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  farmId String @map("farm_id") @db.Uuid
+  farm   Farm   @relation(fields: [farmId], references: [id], onDelete: Cascade)
+
+  maleId String @map("male_id") @db.Uuid
+  male   Animal @relation("BreedingEventMale", fields: [maleId], references: [id], onDelete: Cascade)
+
+  femaleId String @map("female_id") @db.Uuid
+  female   Animal @relation("BreedingEventFemale", fields: [femaleId], references: [id], onDelete: Cascade)
+
+  recordedById String? @map("recorded_by_id") @db.Uuid
+  recordedBy   User?   @relation("BreedingEventRecordedBy", fields: [recordedById], references: [id], onDelete: SetNull)
+
+  animal   Animal? @relation(fields: [animalId], references: [id])
+  animalId String? @db.Uuid
+
+  @@index([farmId, maleId])
+  @@index([farmId, femaleId])
+  @@index([farmId, status])
+  @@index([farmId, actualBirthDate])
+  @@map("breeding_events")
+}
+
+model Mortality {
+  id           String     @id @default(uuid()) @db.Uuid
+  dateOfDeath  DateTime   @map("date_of_death")
+  cause        DeathCause
+  causeDetails String?    @map("cause_details")
+
+  location String?
+  age      String?
+
+  postMortemNotes String? @map("post_mortem_notes")
+  bodyDisposal    String? @map("body_disposal")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  farmId String @map("farm_id") @db.Uuid
+  farm   Farm   @relation(fields: [farmId], references: [id], onDelete: Cascade)
+
+  animalId String @map("animal_id") @db.Uuid
+  animal   Animal @relation(fields: [animalId], references: [id], onDelete: Cascade)
+
+  recordedById String? @map("recorded_by_id") @db.Uuid
+  recordedBy   User?   @relation("MortalityRecordedBy", fields: [recordedById], references: [id], onDelete: SetNull)
+
+  @@index([farmId, animalId])
+  @@index([farmId, dateOfDeath])
+  @@index([farmId, cause])
+  @@map("mortalities")
+}
+
+enum Role {
+  ADMIN
+  AGENT
+}
+
+enum CropStage {
+  PLANTED
+  GROWING
+  READY
+  HARVESTED
+}
+
+enum NotificationType {
+  FIELD_AT_RISK
+  FIELD_COMPLETED
+  FIELD_ASSIGNED
+}
+
+enum Species {
+  CATTLE
+  SHEEP
+  GOATS
+  PIGS
+  POULTRY
+  FISH
+  BEEHIVE
+  OTHER
+}
+
+enum Sex {
+  MALE
+  FEMALE
+  UNKNOWN
+}
+
+enum AnimalStatus {
+  ACTIVE
+  SOLD
+  DEAD
+  MISSING
+  ARCHIVED
+}
+
+enum AnimalIdentityType {
+  QR_CODE
+  RFID_TAG
+  EAR_TAG
+  TATTOO
+  MICROCHIP
+  NAME
+  MANUAL_ID
+}
+
+enum MedicalEventType {
+  ILLNESS
+  TREATMENT
+  MEDICATION
+  VACCINATION
+  HEALTH_CHECK
+  SURGERY
+  DEATH
+  INJURY
+  QUARANTINE
+}
+
+enum MedicalStatus {
+  SCHEDULED
+  COMPLETED
+  MISSED
+  CANCELLED
+}
+
+enum BreedingStatus {
+  PLANNED
+  MATED
+  PREGNANT
+  DELIVERED
+  FAILED
+  MISCARRIAGE
+}
+
+enum DeathCause {
+  DISEASE
+  INJURY
+  AGE
+  PREDATION
+  ACCIDENT
+  UNKNOWN
+  EUTHANASIA
+  OTHER
+}
