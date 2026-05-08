@@ -3,8 +3,11 @@ import { DashboardService } from './dashboard.service';
 import { DashboardController } from './dashboard.controller';
 import { AgentQueriesService } from './services/agent-queries.services';
 import { DashboardSummariesService } from './services/dashboard-summaries.services';
+import { UpdatesModule } from '@/updates/updates.module';
+import { FieldsModule } from '@/fields/fields.module';
 
 @Module({
+  imports: [FieldsModule, UpdatesModule],
   controllers: [DashboardController],
   providers: [DashboardService, AgentQueriesService, DashboardSummariesService],
   exports: [DashboardService],

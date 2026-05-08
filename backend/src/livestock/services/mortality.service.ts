@@ -6,6 +6,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { RecordMortalityDto } from '../dto/record-mortality.dto';
+import { QueryMortalityHistoryDto } from '../dto/query-morality.dto';
 
 @Injectable()
 export class MortalityService {
@@ -82,22 +83,44 @@ export class MortalityService {
     });
   }
 
-  async getHistory(farmId: string, days = 90) {
+  async getHistory(query: QueryMortalityHistoryDto, farmId: string) {
+    const { days = 90, page = 1, limit = 20 } = query;
     const cutoff = new Date();
     cutoff.setDate(cutoff.getDate() - days);
 
-    return this.prisma.mortality.findMany({
-      where: {
-        farmId,
-        dateOfDeath: { gte: cutoff },
+    const skip = (page - 1) * limit;
+
+    const [history, total] = await this.prisma.$transaction([
+      this.prisma.mortality.findMany({
+        where: {
+          farmId,
+          dateOfDeath: { gte: cutoff },
+        },
+        select: {
+          ...this.MORTALITY_SELECT,
+          animal: { select: { id: true, name: true, species: true } },
+        },
+        orderBy: { dateOfDeath: 'desc' },
+        skip,
+        take: limit,
+      }),
+      this.prisma.mortality.count({
+        where: {
+          farmId,
+          dateOfDeath: { gte: cutoff },
+        },
+      }),
+    ]);
+
+    return {
+      data: history,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
       },
-      select: {
-        ...this.MORTALITY_SELECT,
-        animal: { select: { id: true, name: true, species: true } },
-      },
-      orderBy: { dateOfDeath: 'desc' },
-      take: 100,
-    });
+    };
   }
 
   async getMortalityAnalytics(farmId: string, days = 365) {

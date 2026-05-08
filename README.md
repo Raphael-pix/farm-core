@@ -1,8 +1,8 @@
-# SmartSeason Field Monitoring System
+# farmcore Field Monitoring System
 
 ## Overview
 
-SmartSeason is a web-based agricultural monitoring platform designed to help coordinators and field agents track crop progress across multiple fields during a growing season.
+farmcore is a web-based agricultural monitoring platform designed to help coordinators and field agents track crop progress across multiple fields during a growing season.
 
 The system is built with a strong focus on:
 
@@ -297,7 +297,7 @@ Use the following accounts to test the system.
 ### Admin Account
 
 ```
-Email:    admin@smartseason.dev
+Email:    admin@farmcore.dev
 Password: Admin@12345
 Role:     ADMIN
 ```
@@ -305,7 +305,7 @@ Role:     ADMIN
 ### Agent Account
 
 ```
-Email:    agent@smartseason.dev
+Email:    agent@farmcore.dev
 Password: Agent@12345
 Role:     AGENT
 ```
@@ -315,7 +315,7 @@ Role:     AGENT
 Both accounts belong to:
 
 ```
-Farm:   Demo SmartSeason Farm
+Farm:   Demo farmcore Farm
 FarmId: (auto-assigned via onboarding seed)
 ```
 

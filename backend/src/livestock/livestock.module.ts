@@ -6,6 +6,7 @@ import { AnimalRegistryService } from './services/animal-registry.service';
 import { MedicalRecordsService } from './services/medical-records.service';
 import { BreedingService } from './services/breeding.service';
 import { MortalityService } from './services/mortality.service';
+import { LivestockDashboardService } from './services/livestock-dashboard.service';
 
 @Module({
   imports: [NotificationsModule],
@@ -16,6 +17,7 @@ import { MortalityService } from './services/mortality.service';
     MedicalRecordsService,
     BreedingService,
     MortalityService,
+    LivestockDashboardService,
   ],
   exports: [LivestockService],
 })

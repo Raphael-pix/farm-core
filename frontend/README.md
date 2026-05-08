@@ -1,9 +1,8 @@
-# SmartSeason — Field Monitoring System
+# farmcore — Field Monitoring System
 
 A lightweight, mobile-first field monitoring platform for agricultural coordinators and field agents in Kenya. Built for **low-bandwidth conditions** with an offline-first mindset.
 
 > **Frontend repository.** This app talks to a separate NestJS backend that handles authentication (via Supabase), multi-tenant farm isolation, and all data persistence.
-
 
 ## ✨ Features
 
@@ -37,7 +36,6 @@ A lightweight, mobile-first field monitoring platform for agricultural coordinat
 - Online/offline indicator in the top bar
 - Queued submissions surface as a "queued" badge until they sync
 
-
 ## 🛠 Tech Stack
 
 - **Framework**: [TanStack Start](https://tanstack.com/start) v1 (React 19 + SSR)
@@ -48,7 +46,6 @@ A lightweight, mobile-first field monitoring platform for agricultural coordinat
 - **State**: Zustand (with persistence)
 - **Auth**: Supabase JS SDK (tokens forwarded to NestJS API)
 - **Forms**: React Hook Form + Zod
-
 
 ## 📁 Project Structure
 
@@ -73,7 +70,6 @@ src/
 ├── lib/                 # supabase, apiClient, utils
 └── styles.css           # Tailwind v4 tokens (oklch theme)
 ```
-
 
 ## 🚀 Getting Started
 
@@ -113,7 +109,6 @@ The app will be available at `http://localhost:3000` (or whichever port Vite pic
 npm run build
 ```
 
-
 ## 🔐 Authentication & Onboarding Flow
 
 1. **Sign up** at `/signup` → Supabase creates the auth user
@@ -125,14 +120,12 @@ npm run build
 
 The app's `_app` layout redirects users without a `farmId` to `/onboarding` automatically.
 
-
 ## 🎨 Design System
 
 - Semantic tokens defined in `src/styles.css` using `oklch`
 - Theme variables: `--background`, `--foreground`, `--primary`, `--sidebar-*`, etc.
 - Dark mode toggled via `.dark` class on `<html>` (managed by `ThemeProvider`)
 - **Never** hardcode colors in components — always use Tailwind classes that map to tokens
-
 
 ## 📡 API Contract
 
@@ -150,7 +143,6 @@ All endpoints are documented by the NestJS backend. Key modules consumed here:
 
 The Axios client (`src/lib/apiClient.ts`) auto-attaches the Supabase access token and refreshes on 401.
 
-
 ## ⚡ Performance Notes
 
 - Pagination on every list endpoint
@@ -158,4 +150,3 @@ The Axios client (`src/lib/apiClient.ts`) auto-attaches the Supabase access toke
 - Minimal animations (motion is reserved for state transitions)
 - Data Saver mode reduces image fidelity
 - Mobile-first layouts; desktop is a progressive enhancement
-

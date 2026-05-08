@@ -30,7 +30,7 @@ export const useAuthStore = create<AuthState>()(
       },
     }),
     {
-      name: 'smartseason-auth',
+      name: 'farmcore-auth',
       partialize: (s) => ({ user: s.user, role: s.role }),
     },
   ),

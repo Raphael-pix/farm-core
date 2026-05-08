@@ -19,15 +19,23 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthCompleteProfileRouteImport } from './routes/auth/complete-profile'
 import { Route as AppProfileRouteImport } from './routes/_app.profile'
 import { Route as AppNotificationsRouteImport } from './routes/_app.notifications'
+import { Route as AppLivestockRouteImport } from './routes/_app.livestock'
 import { Route as AppFarmRouteImport } from './routes/_app.farm'
 import { Route as AppAgentRouteImport } from './routes/_app.agent'
 import { Route as AppAdminRouteImport } from './routes/_app.admin'
+import { Route as AppLivestockMortalityRouteImport } from './routes/_app.livestock.mortality'
+import { Route as AppLivestockMedicalRouteImport } from './routes/_app.livestock.medical'
+import { Route as AppLivestockDashboardRouteImport } from './routes/_app.livestock.dashboard'
+import { Route as AppLivestockBreedingRouteImport } from './routes/_app.livestock.breeding'
+import { Route as AppLivestockAnimalsRouteImport } from './routes/_app.livestock.animals'
 import { Route as AppFieldsIdRouteImport } from './routes/_app.fields.$id'
 import { Route as AppAgentFieldsRouteImport } from './routes/_app.agent.fields'
 import { Route as AppAgentDashboardRouteImport } from './routes/_app.agent.dashboard'
 import { Route as AppAdminUsersRouteImport } from './routes/_app.admin.users'
 import { Route as AppAdminFieldsRouteImport } from './routes/_app.admin.fields'
 import { Route as AppAdminDashboardRouteImport } from './routes/_app.admin.dashboard'
+import { Route as AppLivestockAnimalsRegisterRouteImport } from './routes/_app.livestock.animals.register'
+import { Route as AppLivestockAnimalsIdRouteImport } from './routes/_app.livestock.animals.$id'
 
 const SignupRoute = SignupRouteImport.update({
   id: '/signup',
@@ -78,6 +86,11 @@ const AppNotificationsRoute = AppNotificationsRouteImport.update({
   path: '/notifications',
   getParentRoute: () => AppRoute,
 } as any)
+const AppLivestockRoute = AppLivestockRouteImport.update({
+  id: '/livestock',
+  path: '/livestock',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppFarmRoute = AppFarmRouteImport.update({
   id: '/farm',
   path: '/farm',
@@ -92,6 +105,31 @@ const AppAdminRoute = AppAdminRouteImport.update({
   id: '/admin',
   path: '/admin',
   getParentRoute: () => AppRoute,
+} as any)
+const AppLivestockMortalityRoute = AppLivestockMortalityRouteImport.update({
+  id: '/mortality',
+  path: '/mortality',
+  getParentRoute: () => AppLivestockRoute,
+} as any)
+const AppLivestockMedicalRoute = AppLivestockMedicalRouteImport.update({
+  id: '/medical',
+  path: '/medical',
+  getParentRoute: () => AppLivestockRoute,
+} as any)
+const AppLivestockDashboardRoute = AppLivestockDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AppLivestockRoute,
+} as any)
+const AppLivestockBreedingRoute = AppLivestockBreedingRouteImport.update({
+  id: '/breeding',
+  path: '/breeding',
+  getParentRoute: () => AppLivestockRoute,
+} as any)
+const AppLivestockAnimalsRoute = AppLivestockAnimalsRouteImport.update({
+  id: '/animals',
+  path: '/animals',
+  getParentRoute: () => AppLivestockRoute,
 } as any)
 const AppFieldsIdRoute = AppFieldsIdRouteImport.update({
   id: '/fields/$id',
@@ -123,6 +161,17 @@ const AppAdminDashboardRoute = AppAdminDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AppAdminRoute,
 } as any)
+const AppLivestockAnimalsRegisterRoute =
+  AppLivestockAnimalsRegisterRouteImport.update({
+    id: '/register',
+    path: '/register',
+    getParentRoute: () => AppLivestockAnimalsRoute,
+  } as any)
+const AppLivestockAnimalsIdRoute = AppLivestockAnimalsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AppLivestockAnimalsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -134,6 +183,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AppAdminRouteWithChildren
   '/agent': typeof AppAgentRouteWithChildren
   '/farm': typeof AppFarmRoute
+  '/livestock': typeof AppLivestockRouteWithChildren
   '/notifications': typeof AppNotificationsRoute
   '/profile': typeof AppProfileRoute
   '/auth/complete-profile': typeof AuthCompleteProfileRoute
@@ -143,6 +193,13 @@ export interface FileRoutesByFullPath {
   '/agent/dashboard': typeof AppAgentDashboardRoute
   '/agent/fields': typeof AppAgentFieldsRoute
   '/fields/$id': typeof AppFieldsIdRoute
+  '/livestock/animals': typeof AppLivestockAnimalsRouteWithChildren
+  '/livestock/breeding': typeof AppLivestockBreedingRoute
+  '/livestock/dashboard': typeof AppLivestockDashboardRoute
+  '/livestock/medical': typeof AppLivestockMedicalRoute
+  '/livestock/mortality': typeof AppLivestockMortalityRoute
+  '/livestock/animals/$id': typeof AppLivestockAnimalsIdRoute
+  '/livestock/animals/register': typeof AppLivestockAnimalsRegisterRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -154,6 +211,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AppAdminRouteWithChildren
   '/agent': typeof AppAgentRouteWithChildren
   '/farm': typeof AppFarmRoute
+  '/livestock': typeof AppLivestockRouteWithChildren
   '/notifications': typeof AppNotificationsRoute
   '/profile': typeof AppProfileRoute
   '/auth/complete-profile': typeof AuthCompleteProfileRoute
@@ -163,6 +221,13 @@ export interface FileRoutesByTo {
   '/agent/dashboard': typeof AppAgentDashboardRoute
   '/agent/fields': typeof AppAgentFieldsRoute
   '/fields/$id': typeof AppFieldsIdRoute
+  '/livestock/animals': typeof AppLivestockAnimalsRouteWithChildren
+  '/livestock/breeding': typeof AppLivestockBreedingRoute
+  '/livestock/dashboard': typeof AppLivestockDashboardRoute
+  '/livestock/medical': typeof AppLivestockMedicalRoute
+  '/livestock/mortality': typeof AppLivestockMortalityRoute
+  '/livestock/animals/$id': typeof AppLivestockAnimalsIdRoute
+  '/livestock/animals/register': typeof AppLivestockAnimalsRegisterRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -176,6 +241,7 @@ export interface FileRoutesById {
   '/_app/admin': typeof AppAdminRouteWithChildren
   '/_app/agent': typeof AppAgentRouteWithChildren
   '/_app/farm': typeof AppFarmRoute
+  '/_app/livestock': typeof AppLivestockRouteWithChildren
   '/_app/notifications': typeof AppNotificationsRoute
   '/_app/profile': typeof AppProfileRoute
   '/auth/complete-profile': typeof AuthCompleteProfileRoute
@@ -185,6 +251,13 @@ export interface FileRoutesById {
   '/_app/agent/dashboard': typeof AppAgentDashboardRoute
   '/_app/agent/fields': typeof AppAgentFieldsRoute
   '/_app/fields/$id': typeof AppFieldsIdRoute
+  '/_app/livestock/animals': typeof AppLivestockAnimalsRouteWithChildren
+  '/_app/livestock/breeding': typeof AppLivestockBreedingRoute
+  '/_app/livestock/dashboard': typeof AppLivestockDashboardRoute
+  '/_app/livestock/medical': typeof AppLivestockMedicalRoute
+  '/_app/livestock/mortality': typeof AppLivestockMortalityRoute
+  '/_app/livestock/animals/$id': typeof AppLivestockAnimalsIdRoute
+  '/_app/livestock/animals/register': typeof AppLivestockAnimalsRegisterRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -198,6 +271,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/agent'
     | '/farm'
+    | '/livestock'
     | '/notifications'
     | '/profile'
     | '/auth/complete-profile'
@@ -207,6 +281,13 @@ export interface FileRouteTypes {
     | '/agent/dashboard'
     | '/agent/fields'
     | '/fields/$id'
+    | '/livestock/animals'
+    | '/livestock/breeding'
+    | '/livestock/dashboard'
+    | '/livestock/medical'
+    | '/livestock/mortality'
+    | '/livestock/animals/$id'
+    | '/livestock/animals/register'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -218,6 +299,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/agent'
     | '/farm'
+    | '/livestock'
     | '/notifications'
     | '/profile'
     | '/auth/complete-profile'
@@ -227,6 +309,13 @@ export interface FileRouteTypes {
     | '/agent/dashboard'
     | '/agent/fields'
     | '/fields/$id'
+    | '/livestock/animals'
+    | '/livestock/breeding'
+    | '/livestock/dashboard'
+    | '/livestock/medical'
+    | '/livestock/mortality'
+    | '/livestock/animals/$id'
+    | '/livestock/animals/register'
   id:
     | '__root__'
     | '/'
@@ -239,6 +328,7 @@ export interface FileRouteTypes {
     | '/_app/admin'
     | '/_app/agent'
     | '/_app/farm'
+    | '/_app/livestock'
     | '/_app/notifications'
     | '/_app/profile'
     | '/auth/complete-profile'
@@ -248,6 +338,13 @@ export interface FileRouteTypes {
     | '/_app/agent/dashboard'
     | '/_app/agent/fields'
     | '/_app/fields/$id'
+    | '/_app/livestock/animals'
+    | '/_app/livestock/breeding'
+    | '/_app/livestock/dashboard'
+    | '/_app/livestock/medical'
+    | '/_app/livestock/mortality'
+    | '/_app/livestock/animals/$id'
+    | '/_app/livestock/animals/register'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -333,6 +430,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppNotificationsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/livestock': {
+      id: '/_app/livestock'
+      path: '/livestock'
+      fullPath: '/livestock'
+      preLoaderRoute: typeof AppLivestockRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/farm': {
       id: '/_app/farm'
       path: '/farm'
@@ -353,6 +457,41 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin'
       preLoaderRoute: typeof AppAdminRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/_app/livestock/mortality': {
+      id: '/_app/livestock/mortality'
+      path: '/mortality'
+      fullPath: '/livestock/mortality'
+      preLoaderRoute: typeof AppLivestockMortalityRouteImport
+      parentRoute: typeof AppLivestockRoute
+    }
+    '/_app/livestock/medical': {
+      id: '/_app/livestock/medical'
+      path: '/medical'
+      fullPath: '/livestock/medical'
+      preLoaderRoute: typeof AppLivestockMedicalRouteImport
+      parentRoute: typeof AppLivestockRoute
+    }
+    '/_app/livestock/dashboard': {
+      id: '/_app/livestock/dashboard'
+      path: '/dashboard'
+      fullPath: '/livestock/dashboard'
+      preLoaderRoute: typeof AppLivestockDashboardRouteImport
+      parentRoute: typeof AppLivestockRoute
+    }
+    '/_app/livestock/breeding': {
+      id: '/_app/livestock/breeding'
+      path: '/breeding'
+      fullPath: '/livestock/breeding'
+      preLoaderRoute: typeof AppLivestockBreedingRouteImport
+      parentRoute: typeof AppLivestockRoute
+    }
+    '/_app/livestock/animals': {
+      id: '/_app/livestock/animals'
+      path: '/animals'
+      fullPath: '/livestock/animals'
+      preLoaderRoute: typeof AppLivestockAnimalsRouteImport
+      parentRoute: typeof AppLivestockRoute
     }
     '/_app/fields/$id': {
       id: '/_app/fields/$id'
@@ -396,6 +535,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppAdminDashboardRouteImport
       parentRoute: typeof AppAdminRoute
     }
+    '/_app/livestock/animals/register': {
+      id: '/_app/livestock/animals/register'
+      path: '/register'
+      fullPath: '/livestock/animals/register'
+      preLoaderRoute: typeof AppLivestockAnimalsRegisterRouteImport
+      parentRoute: typeof AppLivestockAnimalsRoute
+    }
+    '/_app/livestock/animals/$id': {
+      id: '/_app/livestock/animals/$id'
+      path: '/$id'
+      fullPath: '/livestock/animals/$id'
+      preLoaderRoute: typeof AppLivestockAnimalsIdRouteImport
+      parentRoute: typeof AppLivestockAnimalsRoute
+    }
   }
 }
 
@@ -429,10 +582,44 @@ const AppAgentRouteWithChildren = AppAgentRoute._addFileChildren(
   AppAgentRouteChildren,
 )
 
+interface AppLivestockAnimalsRouteChildren {
+  AppLivestockAnimalsIdRoute: typeof AppLivestockAnimalsIdRoute
+  AppLivestockAnimalsRegisterRoute: typeof AppLivestockAnimalsRegisterRoute
+}
+
+const AppLivestockAnimalsRouteChildren: AppLivestockAnimalsRouteChildren = {
+  AppLivestockAnimalsIdRoute: AppLivestockAnimalsIdRoute,
+  AppLivestockAnimalsRegisterRoute: AppLivestockAnimalsRegisterRoute,
+}
+
+const AppLivestockAnimalsRouteWithChildren =
+  AppLivestockAnimalsRoute._addFileChildren(AppLivestockAnimalsRouteChildren)
+
+interface AppLivestockRouteChildren {
+  AppLivestockAnimalsRoute: typeof AppLivestockAnimalsRouteWithChildren
+  AppLivestockBreedingRoute: typeof AppLivestockBreedingRoute
+  AppLivestockDashboardRoute: typeof AppLivestockDashboardRoute
+  AppLivestockMedicalRoute: typeof AppLivestockMedicalRoute
+  AppLivestockMortalityRoute: typeof AppLivestockMortalityRoute
+}
+
+const AppLivestockRouteChildren: AppLivestockRouteChildren = {
+  AppLivestockAnimalsRoute: AppLivestockAnimalsRouteWithChildren,
+  AppLivestockBreedingRoute: AppLivestockBreedingRoute,
+  AppLivestockDashboardRoute: AppLivestockDashboardRoute,
+  AppLivestockMedicalRoute: AppLivestockMedicalRoute,
+  AppLivestockMortalityRoute: AppLivestockMortalityRoute,
+}
+
+const AppLivestockRouteWithChildren = AppLivestockRoute._addFileChildren(
+  AppLivestockRouteChildren,
+)
+
 interface AppRouteChildren {
   AppAdminRoute: typeof AppAdminRouteWithChildren
   AppAgentRoute: typeof AppAgentRouteWithChildren
   AppFarmRoute: typeof AppFarmRoute
+  AppLivestockRoute: typeof AppLivestockRouteWithChildren
   AppNotificationsRoute: typeof AppNotificationsRoute
   AppProfileRoute: typeof AppProfileRoute
   AppFieldsIdRoute: typeof AppFieldsIdRoute
@@ -442,6 +629,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAdminRoute: AppAdminRouteWithChildren,
   AppAgentRoute: AppAgentRouteWithChildren,
   AppFarmRoute: AppFarmRoute,
+  AppLivestockRoute: AppLivestockRouteWithChildren,
   AppNotificationsRoute: AppNotificationsRoute,
   AppProfileRoute: AppProfileRoute,
   AppFieldsIdRoute: AppFieldsIdRoute,

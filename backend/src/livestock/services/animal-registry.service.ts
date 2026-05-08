@@ -90,7 +90,6 @@ export class AnimalRegistryService {
         select: ANIMAL_SELECT,
       });
 
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call
       const qrCode = `${farmId.slice(0, 8)}-${dto.species.slice(0, 3)}-${nanoid(8)}`;
       await tx.animalIdentity.create({
         data: {
@@ -190,9 +189,9 @@ export class AnimalRegistryService {
   async changeStatus(
     id: string,
     newStatus: AnimalStatus,
-    reason: string,
     farmId: string,
     updatedById: string,
+    reason?: string,
   ) {
     const animal = await this.getDetail(id, farmId);
 

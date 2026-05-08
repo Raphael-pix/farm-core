@@ -1,18 +1,16 @@
-# 🌱 SmartSeason Field Monitoring System
+# 🌱 farmcore Field Monitoring System
 
 A backend API for monitoring agricultural fields across farms. Built for coordinators and field workers, with farm-level data isolation, offline-first data capture, and low-bandwidth optimization.
 
-
 ## Overview
 
-SmartSeason manages agricultural fields across independent farms. Two roles exist:
+farmcore manages agricultural fields across independent farms. Two roles exist:
 
 **Admin (Farm Owner / Coordinator)** — manages a single farm, creates fields, assigns agents, views farm-wide analytics.
 
 **Agent (Field Worker)** — belongs to one farm, views only their assigned fields, submits field updates and images.
 
 Every request is scoped to a `farmId`. Cross-farm access is never allowed.
-
 
 ## Tech Stack
 
@@ -25,7 +23,6 @@ Every request is scoped to a `farmId`. Cross-farm access is never allowed.
 | File Storage    | Supabase Storage        |
 | Caching         | Redis                   |
 | Background Jobs | BullMQ                  |
-
 
 ## Setup
 
@@ -60,7 +57,6 @@ npx prisma migrate dev --name init
 npm run start:dev
 ```
 
-
 ## Environment Variables
 
 | Variable                    | Description                             | Example                           |
@@ -82,7 +78,6 @@ npm run start:dev
 | `AT_RISK_THRESHOLD_DAYS`    | Days without update before AT_RISK      | `7`                               |
 | `MAX_FILE_SIZE_MB`          | Max image upload size                   | `5`                               |
 | `ALLOWED_MIME_TYPES`        | Allowed image MIME types                | `image/jpeg,image/png,image/webp` |
-
 
 ## API Docs
 

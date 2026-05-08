@@ -1,7 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Species, AnimalStatus } from 'generated/prisma/enums';
+import { AnimalStatus } from 'generated/prisma/enums';
 
-import { PrismaService } from '@/prisma/prisma.service';
 import { JwtUser } from '@/auth/types/request-user.type';
 
 import { RegisterAnimalDto } from './dto/register-animal.dto';
@@ -15,13 +14,14 @@ import { AnimalRegistryService } from './services/animal-registry.service';
 import { MedicalRecordsService } from './services/medical-records.service';
 import { BreedingService } from './services/breeding.service';
 import { MortalityService } from './services/mortality.service';
+import { QueryMedicalHistoryDto } from './dto/query-medical-history.dto';
+import { QueryMortalityHistoryDto } from './dto/query-morality.dto';
 
 @Injectable()
 export class LivestockService {
   private readonly logger = new Logger(LivestockService.name);
 
   constructor(
-    private readonly prisma: PrismaService,
     private readonly animalRegistry: AnimalRegistryService,
     private readonly medicalRecords: MedicalRecordsService,
     private readonly breeding: BreedingService,
@@ -46,16 +46,16 @@ export class LivestockService {
 
   async changeAnimalStatus(
     id: string,
-    status: AnimalStatus,
-    reason: string,
     user: JwtUser,
+    status: AnimalStatus,
+    reason?: string,
   ) {
     return this.animalRegistry.changeStatus(
       id,
       status,
-      reason,
       user.farmId,
       user.id,
+      reason,
     );
   }
 
@@ -71,6 +71,10 @@ export class LivestockService {
       user.id,
     );
     return medical;
+  }
+
+  async getFullMedicalHistory(user: JwtUser, query: QueryMedicalHistoryDto) {
+    return this.medicalRecords.getFullHistory(user.farmId, query);
   }
 
   async getMedicalHistory(animalId: string, user: JwtUser) {
@@ -115,8 +119,8 @@ export class LivestockService {
     return this.mortality.record(animalId, dto, user.farmId, user.id);
   }
 
-  async getMortalityHistory(user: JwtUser, days = 90) {
-    return this.mortality.getHistory(user.farmId, days);
+  async getMortalityHistory(query: QueryMortalityHistoryDto, user: JwtUser) {
+    return this.mortality.getHistory(query, user.farmId);
   }
 
   async getFullProfile(id: string, user: JwtUser) {
@@ -134,28 +138,5 @@ export class LivestockService {
       mortality,
       lineage: { parents, offspring },
     };
-  }
-
-  async getHerdStatistics(user: JwtUser) {
-    const stats = await this.prisma.animal.groupBy({
-      by: ['species', 'status'],
-      where: { farmId: user.farmId },
-      _count: { id: true },
-    });
-
-    return stats.reduce(
-      (acc, row) => {
-        if (!acc[row.species]) acc[row.species] = {};
-
-        acc[row.species][row.status] = row._count.id;
-
-        return acc;
-      },
-      {} as Record<Species, Partial<Record<AnimalStatus, number>>>,
-    );
-  }
-
-  async getHealthAlerts(user: JwtUser) {
-    return this.medicalRecords.getAlerts(user.farmId);
   }
 }

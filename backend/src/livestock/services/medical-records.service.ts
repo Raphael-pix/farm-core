@@ -9,6 +9,8 @@ import dayjs from 'dayjs';
 
 import { PrismaService } from '@/prisma/prisma.service';
 import { RecordMedicalEventDto } from '../dto/record-medical-event.dto';
+import { QueryMedicalHistoryDto } from '../dto/query-medical-history.dto';
+import { Prisma } from 'generated/prisma/client';
 
 const MEDICAL_RECORD_SELECT = {
   id: true,
@@ -31,6 +33,7 @@ const MEDICAL_RECORD_SELECT = {
   actualCost: true,
   notes: true,
   recordedBy: { select: { id: true, fullName: true, email: true } },
+  animal: { select: { id: true, name: true } },
   createdAt: true,
 } as const;
 
@@ -98,6 +101,38 @@ export class MedicalRecordsService {
     }
 
     return records;
+  }
+
+  async getFullHistory(farmId: string, query: QueryMedicalHistoryDto) {
+    const { status, type, page = 1, limit = 20 } = query;
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.MedicalRecordWhereInput = {
+      farmId,
+      ...(type && { type }),
+      ...(status && { status }),
+    };
+
+    const [records, total] = await this.prisma.$transaction([
+      this.prisma.medicalRecord.findMany({
+        where,
+        select: MEDICAL_RECORD_SELECT,
+        skip,
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+      }),
+      this.prisma.medicalRecord.count({ where }),
+    ]);
+
+    return {
+      data: records,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async schedule(
@@ -193,8 +228,10 @@ export class MedicalRecordsService {
           },
           select: {
             animal: { select: { id: true, name: true, species: true } },
+            id: true,
             type: true,
             diagnosis: true,
+            status: true,
             createdAt: true,
           },
           orderBy: { createdAt: 'desc' },

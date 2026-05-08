@@ -298,7 +298,7 @@ function ProfilePage() {
           <SettingRow
             icon={<Palette className="h-4 w-4" />}
             title="Appearance"
-            description="Choose how SmartSeason looks on this device."
+            description="Choose how farmcore looks on this device."
           >
             <Select
               value={settings.theme}

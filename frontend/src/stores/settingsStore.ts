@@ -42,7 +42,7 @@ export const useSettingsStore = create<SettingsState>()(
       setDataSaver: (dataSaver) => set({ dataSaver }),
     }),
     {
-      name: 'smartseason-settings',
+      name: 'farmcore-settings',
       onRehydrateStorage: () => (state) => {
         if (state) applyTheme(state.theme)
       },

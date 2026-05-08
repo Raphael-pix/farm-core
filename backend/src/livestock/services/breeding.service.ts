@@ -8,6 +8,8 @@ import { BreedingStatus } from 'generated/prisma/enums';
 
 import { PrismaService } from '@/prisma/prisma.service';
 import { CreateBreedingEventDto } from '../dto/create-breeding-event.dto';
+import { QueryBreedingEventsDto } from '../dto/query-breeding-events';
+import { Prisma } from 'generated/prisma/client';
 
 const BREEDING_EVENT_SELECT = {
   id: true,
@@ -186,6 +188,35 @@ export class BreedingService {
     );
 
     return updated;
+  }
+
+  async getBreedingEvents(farmId: string, query: QueryBreedingEventsDto) {
+    const { status, page = 1, limit = 20 } = query;
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.BreedingEventWhereInput = {
+      farmId,
+      ...(status && { status }),
+    };
+
+    const [events, total] = await this.prisma.$transaction([
+      this.prisma.breedingEvent.findMany({
+        where,
+        skip,
+        select: BREEDING_EVENT_SELECT,
+      }),
+      this.prisma.breedingEvent.count({ where }),
+    ]);
+
+    return {
+      data: events,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async getParentage(animalId: string, farmId: string) {

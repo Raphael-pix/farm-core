@@ -2,7 +2,7 @@ export const configuration = () => ({
   app: {
     nodeEnv: process.env.NODE_ENV ?? 'development',
     port: parseInt(process.env.PORT ?? '3000', 10),
-    name: process.env.APP_NAME ?? 'SmartSeason API',
+    name: process.env.APP_NAME ?? 'farmcore API',
   },
 
   frontend: {

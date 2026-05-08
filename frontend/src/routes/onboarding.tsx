@@ -103,7 +103,7 @@ function OnboardingPage() {
               <Sprout className="h-5 w-5" />
             </div>
             <span className="text-lg font-semibold tracking-tight">
-              SmartSeason
+              farmcore
             </span>
           </div>
           <Button

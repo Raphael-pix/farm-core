@@ -11,6 +11,12 @@ import {
   CloudUpload,
   User as UserIcon,
   Building2,
+  PawPrint,
+  Syringe,
+  Heart,
+  Skull,
+  ChevronDown,
+  ChevronRight,
 } from 'lucide-react'
 import { useAuthStore } from '@/stores/authStore'
 import { useOfflineQueueStore } from '@/stores/offlineQueueStore'
@@ -23,6 +29,23 @@ interface NavItem {
   to: string
   label: string
   icon: React.ComponentType<{ className?: string }>
+}
+interface NavGroup {
+  label: string
+  icon: React.ComponentType<{ className?: string }>
+  items: NavItem[]
+}
+
+const livestockNav: NavGroup = {
+  label: 'Livestock',
+  icon: PawPrint,
+  items: [
+    { to: '/livestock/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    { to: '/livestock/animals', label: 'Animals', icon: PawPrint },
+    { to: '/livestock/medical', label: 'Medical Records', icon: Syringe },
+    { to: '/livestock/breeding', label: 'Breeding Events', icon: Heart },
+    { to: '/livestock/mortality', label: 'Mortality', icon: Skull },
+  ],
 }
 
 const adminNav: NavItem[] = [
@@ -160,6 +183,8 @@ function SidebarContent({
   pathname: string
   onNavigate?: () => void
 }) {
+  const livestockActive = pathname.startsWith('/livestock')
+  const [livestockOpen, setLivestockOpen] = useState(livestockActive)
   return (
     <>
       <div className="flex h-14 items-center justify-between border-b border-sidebar-border px-4">
@@ -172,7 +197,7 @@ function SidebarContent({
             <Sprout className="h-5 w-5" />
           </div>
           <span className="text-base font-semibold tracking-tight">
-            SmartSeason
+            FarmCore
           </span>
         </Link>
         {onNavigate && (
@@ -207,6 +232,50 @@ function SidebarContent({
             </Link>
           )
         })}
+
+        <button
+          onClick={() => setLivestockOpen((p) => !p)}
+          className={cn(
+            'flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors',
+            livestockActive
+              ? 'text-sidebar-primary'
+              : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground',
+          )}
+        >
+          <PawPrint className="h-4.5 w-4.5" />
+          <span className="flex-1 text-left">Livestock</span>
+          {livestockOpen ? (
+            <ChevronDown className="h-4 w-4" />
+          ) : (
+            <ChevronRight className="h-4 w-4" />
+          )}
+        </button>
+
+        {livestockOpen && (
+          <div className="ml-3 space-y-0.5 border-l border-sidebar-border pl-3">
+            {livestockNav.items.map((item) => {
+              const Icon = item.icon
+              const active =
+                pathname === item.to || pathname.startsWith(item.to + '/')
+              return (
+                <Link
+                  key={item.to}
+                  to={item.to as any}
+                  onClick={onNavigate}
+                  className={cn(
+                    'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                    active
+                      ? 'bg-sidebar-accent text-sidebar-primary'
+                      : 'text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground',
+                  )}
+                >
+                  <Icon className="h-4 w-4" />
+                  <span>{item.label}</span>
+                </Link>
+              )
+            })}
+          </div>
+        )}
       </nav>
     </>
   )

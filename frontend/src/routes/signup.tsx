@@ -92,9 +92,7 @@ function SignupPage() {
           <div className="flex h-9 w-9 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
             <Sprout className="h-5 w-5" />
           </div>
-          <span className="text-lg font-semibold tracking-tight">
-            SmartSeason
-          </span>
+          <span className="text-lg font-semibold tracking-tight">farmcore</span>
         </div>
         <div className="space-y-4">
           <h1 className="text-3xl font-semibold leading-tight">
@@ -107,7 +105,7 @@ function SignupPage() {
           </p>
         </div>
         <div className="text-xs text-sidebar-foreground/60">
-          © {new Date().getFullYear()} SmartSeason
+          © {new Date().getFullYear()} farmcore
         </div>
         <div
           aria-hidden
@@ -122,7 +120,7 @@ function SignupPage() {
               <Sprout className="h-5 w-5" />
             </div>
             <span className="text-lg font-semibold tracking-tight">
-              SmartSeason
+              farmcore
             </span>
           </div>
           <h2 className="text-2xl font-semibold tracking-tight text-foreground">
@@ -154,7 +152,7 @@ function SignupPage() {
                 id="email"
                 type="email"
                 autoComplete="email"
-                placeholder="you@smartseason.co.ke"
+                placeholder="you@farmcore.co.ke"
                 {...register('email')}
               />
               {errors.email && (

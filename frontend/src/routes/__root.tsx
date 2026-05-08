@@ -42,13 +42,13 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
     meta: [
       { charSet: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { title: 'SmartSeason — Field Monitoring' },
+      { title: 'farmcore — Field Monitoring' },
       {
         name: 'description',
         content:
-          'SmartSeason is a lightweight field monitoring system for agricultural coordinators and field agents in Kenya.',
+          'farmcore is a lightweight field monitoring system for agricultural coordinators and field agents in Kenya.',
       },
-      { property: 'og:title', content: 'SmartSeason — Field Monitoring' },
+      { property: 'og:title', content: 'farmcore — Field Monitoring' },
       {
         property: 'og:description',
         content:

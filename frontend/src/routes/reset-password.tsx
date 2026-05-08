@@ -92,9 +92,7 @@ function ResetPasswordPage() {
           <div className="flex h-9 w-9 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
             <Sprout className="h-5 w-5" />
           </div>
-          <span className="text-lg font-semibold tracking-tight">
-            SmartSeason
-          </span>
+          <span className="text-lg font-semibold tracking-tight">farmcore</span>
         </div>
         <div className="space-y-4">
           <h1 className="text-3xl font-semibold leading-tight">
@@ -106,7 +104,7 @@ function ResetPasswordPage() {
           </p>
         </div>
         <div className="text-xs text-sidebar-foreground/60">
-          © {new Date().getFullYear()} SmartSeason
+          © {new Date().getFullYear()} farmcore
         </div>
         <div
           aria-hidden
@@ -121,7 +119,7 @@ function ResetPasswordPage() {
               <Sprout className="h-5 w-5" />
             </div>
             <span className="text-lg font-semibold tracking-tight">
-              SmartSeason
+              farmcore
             </span>
           </div>
 

@@ -20,6 +20,9 @@ export class CacheService {
   dashboardKey(scope: `admin:${string}` | `agent:${string}`) {
     return `${NS}:dashboard:${scope}`;
   }
+  livestockDashboardKey(scope: `livestock:${string}`) {
+    return `${NS}:dashboard:${scope}`;
+  }
 
   async get<T>(key: string): Promise<T | null> {
     try {

@@ -128,6 +128,50 @@ export interface AgentDashboard {
   generatedAt: string
 }
 
+export interface LivestockDashboard {
+  summary: {
+    totalAnimals: number
+    bySpecies: Record<string, number>
+    byStatus: Record<AnimalStatus, number>
+  }
+
+  statusDistribution: Record<AnimalStatus, number>
+
+  mortalityTrend: Array<{
+    date: string
+    count: number
+  }>
+
+  healthAlerts: {
+    recentIllnesses: Array<{
+      id: string
+      status: MedicalRecordStatus
+      createdAt: Date
+      type: MedicalRecordType
+      diagnosis: string | null
+      animal: {
+        id: string
+        name: string | null
+        species: Species
+      }
+    }>
+    missedTreatments: Array<{
+      id: string
+      type: MedicalRecordType
+      title: string
+      scheduledFor: Date | null
+      animal: {
+        id: string
+        name: string | null
+        species: Species
+      }
+    }>
+    upcomingVaccinations: Array<MedicalRecord>
+    alertCount: number
+  }
+  generatedAt: string
+}
+
 export type NotificationType =
   | 'FIELD_AT_RISK'
   | 'FIELD_UPDATE'
@@ -163,24 +207,36 @@ export interface UnreadCountResponse {
   unreadCount: number
 }
 
+export type AnimalStatus = 'ACTIVE' | 'SOLD' | 'DEAD' | 'MISSING' | 'ARCHIVED'
+export type AnimalSex = 'MALE' | 'FEMALE' | 'UNKNOWN'
+export type Species =
+  | 'CATTLE'
+  | 'SHEEP'
+  | 'GOATS'
+  | 'PIGS'
+  | 'POULTRY'
+  | 'FISH'
+  | 'BEEHIVE'
+  | 'OTHER'
+export type AnimalIdentityType =
+  | 'QR_CODE'
+  | 'RFID_TAG'
+  | 'EAR_TAG'
+  | 'TATTOO'
+  | 'MICROCHIP'
+  | 'NAME'
+  | 'MANUAL_ID'
+
 export interface Animal {
   id: string
   farmId: string
   name?: string
-  species:
-    | 'CATTLE'
-    | 'SHEEP'
-    | 'GOATS'
-    | 'PIGS'
-    | 'POULTRY'
-    | 'FISH'
-    | 'BEEHIVE'
-    | 'OTHER'
+  species: Species
   breed?: string
-  sex: 'MALE' | 'FEMALE' | 'UNKNOWN'
+  sex: AnimalSex
   dateOfBirth?: string
   acquiredDate?: string
-  status: 'ACTIVE' | 'SOLD' | 'DEAD' | 'MISSING' | 'ARCHIVED'
+  status: AnimalStatus
   statusChangedAt?: string
   statusReason?: string
   color?: string
@@ -204,14 +260,7 @@ export interface Animal {
 
 export interface AnimalIdentity {
   id: string
-  type:
-    | 'QR_CODE'
-    | 'RFID_TAG'
-    | 'EAR_TAG'
-    | 'TATTOO'
-    | 'MICROCHIP'
-    | 'NAME'
-    | 'MANUAL_ID'
+  type: AnimalIdentityType
   value: string
   isActive: boolean
   issuedAt: string
@@ -219,19 +268,26 @@ export interface AnimalIdentity {
   notes?: string
 }
 
+export type MedicalRecordType =
+  | 'ILLNESS'
+  | 'TREATMENT'
+  | 'MEDICATION'
+  | 'VACCINATION'
+  | 'HEALTH_CHECK'
+  | 'SURGERY'
+  | 'DEATH'
+  | 'INJURY'
+  | 'QUARANTINE'
+export type MedicalRecordStatus =
+  | 'SCHEDULED'
+  | 'COMPLETED'
+  | 'MISSED'
+  | 'CANCELLED'
+
 export interface MedicalRecord {
   id: string
-  type:
-    | 'ILLNESS'
-    | 'TREATMENT'
-    | 'MEDICATION'
-    | 'VACCINATION'
-    | 'HEALTH_CHECK'
-    | 'SURGERY'
-    | 'DEATH'
-    | 'INJURY'
-    | 'QUARANTINE'
-  status: 'SCHEDULED' | 'COMPLETED' | 'MISSED' | 'CANCELLED'
+  type: MedicalRecordType
+  status: MedicalRecordStatus
   title: string
   description?: string
   diagnosis?: string
@@ -249,18 +305,21 @@ export interface MedicalRecord {
   actualCost?: number
   notes?: string
   recordedBy: { id: string; fullName: string; email: string }
+  animal: { id: string; name: string }
   createdAt: string
 }
 
+export type BreedingStatus =
+  | 'PLANNED'
+  | 'MATED'
+  | 'PREGNANT'
+  | 'DELIVERED'
+  | 'FAILED'
+  | 'MISCARRIAGE'
+
 export interface BreedingEvent {
   id: string
-  status:
-    | 'PLANNED'
-    | 'MATED'
-    | 'PREGNANT'
-    | 'DELIVERED'
-    | 'FAILED'
-    | 'MISCARRIAGE'
+  status: BreedingStatus
   plannedDate?: string
   matedDate?: string
   expectedBirthDate?: string
@@ -275,18 +334,20 @@ export interface BreedingEvent {
   updatedAt: string
 }
 
+export type MortalityCause =
+  | 'DISEASE'
+  | 'INJURY'
+  | 'AGE'
+  | 'PREDATION'
+  | 'ACCIDENT'
+  | 'UNKNOWN'
+  | 'EUTHANASIA'
+  | 'OTHER'
+
 export interface Mortality {
   id: string
   dateOfDeath: string
-  cause:
-    | 'DISEASE'
-    | 'INJURY'
-    | 'AGE'
-    | 'PREDATION'
-    | 'ACCIDENT'
-    | 'UNKNOWN'
-    | 'EUTHANASIA'
-    | 'OTHER'
+  cause: MortalityCause
   causeDetails?: string
   location?: string
   age?: string
@@ -326,19 +387,30 @@ export interface HealthAlerts {
   alertCount: number
 }
 
+export type FeedType =
+  | 'GRAIN'
+  | 'HAY'
+  | 'SILAGE'
+  | 'PELLETS'
+  | 'SUPPLEMENTS'
+  | 'PASTURE'
+  | 'OTHER'
+
+export type FeedUnit =
+  | 'KG'
+  | 'TONNES'
+  | 'LITRES'
+  | 'BAGS'
+  | 'BALES'
+  | 'BUNDLES'
+  | 'OTHER'
+
 export interface Feed {
   id: string
   farmId: string
   name: string
-  type:
-    | 'GRAIN'
-    | 'HAY'
-    | 'SILAGE'
-    | 'PELLETS'
-    | 'SUPPLEMENTS'
-    | 'PASTURE'
-    | 'OTHER'
-  unit: 'KG' | 'TONNES' | 'LITRES' | 'BAGS' | 'BALES' | 'BUNDLES' | 'OTHER'
+  type: FeedType
+  unit: FeedUnit
   costPerUnit?: number
   supplier?: string
   lowStockThreshold?: number
@@ -346,6 +418,13 @@ export interface Feed {
   isActive: boolean
   createdAt: string
 }
+
+export type FeedInventoryStatus =
+  | 'ADEQUATE'
+  | 'LOW'
+  | 'CRITICAL'
+  | 'OUT_OF_STOCK'
+  | 'OVERSTOCKED'
 
 export interface FeedInventory {
   id: string
@@ -356,7 +435,7 @@ export interface FeedInventory {
   location?: string
   lastUpdatedAt?: string
   lastUpdatedReason?: string
-  status: 'ADEQUATE' | 'LOW' | 'CRITICAL' | 'OUT_OF_STOCK' | 'OVERSTOCKED'
+  status: FeedInventoryStatus
   updatedAt: string
 }
 

@@ -41,6 +41,10 @@ import { AnimalRegistryService } from './services/animal-registry.service';
 import { MedicalRecordsService } from './services/medical-records.service';
 import { BreedingService } from './services/breeding.service';
 import { MortalityService } from './services/mortality.service';
+import { QueryBreedingEventsDto } from './dto/query-breeding-events';
+import { QueryMedicalHistoryDto } from './dto/query-medical-history.dto';
+import { LivestockDashboardService } from './services/livestock-dashboard.service';
+import { QueryMortalityHistoryDto } from './dto/query-morality.dto';
 
 @ApiTags('Livestock')
 @ApiBearerAuth('supabase-jwt')
@@ -53,6 +57,7 @@ export class LivestockController {
     private readonly MedicalRecordsService: MedicalRecordsService,
     private readonly breedingService: BreedingService,
     private readonly mortalityService: MortalityService,
+    private readonly livestockDashboardService: LivestockDashboardService,
   ) {}
 
   // ANIMAL REGISTRY — Register, list, update, delete animals
@@ -93,6 +98,24 @@ export class LivestockController {
     @CurrentUser() user: JwtUser,
   ) {
     return this.livestockService.listAnimals(query, user);
+  }
+
+  /**
+   * Get medical history for a farm(all records, ordered by date).
+   *
+   * GET /api/v1/livestock/animals/medical
+   */
+  @Get('animals/medical')
+  @ApiOperation({
+    summary: 'Get medical history',
+    description:
+      'Retrieve all medical records for animal, ordered by date DESC.',
+  })
+  async getFullMedicalHistory(
+    @Query() query: QueryMedicalHistoryDto,
+    @CurrentUser() user: JwtUser,
+  ) {
+    return this.livestockService.getFullMedicalHistory(user, query);
   }
 
   /**
@@ -171,14 +194,14 @@ export class LivestockController {
   @ApiParam({ name: 'id', description: 'Animal UUID' })
   async changeStatus(
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() body: { status: string; reason: string },
+    @Body() body: { status: string; reason?: string },
     @CurrentUser() user: JwtUser,
   ) {
     return this.livestockService.changeAnimalStatus(
       id,
+      user,
       body.status as AnimalStatus,
       body.reason,
-      user,
     );
   }
 
@@ -397,7 +420,7 @@ export class LivestockController {
     description: 'Recent illnesses, missed treatments, upcoming vaccinations.',
   })
   async getHealthAlerts(@CurrentUser() user: JwtUser) {
-    return this.livestockService.getHealthAlerts(user);
+    return this.livestockDashboardService.getHealthAlerts(user);
   }
 
   // BREEDING — Track mating events, births, offspring, lineage
@@ -535,15 +558,10 @@ export class LivestockController {
     description: 'Get paginated breeding events with optional status filter.',
   })
   listBreedingEvents(
-    @Query('status') status?: string,
-    @Query('page') page: number = 1,
-    @Query('limit') limit: number = 20,
+    @Query() query: QueryBreedingEventsDto,
+    @CurrentUser() user: JwtUser,
   ) {
-    // Returns breeding events for the farm
-    return {
-      data: [],
-      meta: { total: 0, page, limit },
-    };
+    return this.breedingService.getBreedingEvents(user.farmId, query);
   }
 
   // MORTALITY — Record animal deaths (Append-only, immutable)
@@ -582,10 +600,10 @@ export class LivestockController {
     description: 'List mortality events for the farm, paginated.',
   })
   async getMortalityHistory(
-    @Query('days') days: number = 90,
+    @Query() query: QueryMortalityHistoryDto,
     @CurrentUser() user: JwtUser,
   ) {
-    return this.livestockService.getMortalityHistory(user, days);
+    return this.livestockService.getMortalityHistory(query, user);
   }
 
   /**
@@ -608,6 +626,19 @@ export class LivestockController {
   // DASHBOARD — Herd overview and analytics
 
   /**
+   * Get main livestock dashboard.
+   *
+   * GET /api/v1/livestock/dashboard
+   */
+  @Get('dashboard')
+  @ApiOperation({
+    summary: 'Get livestock dashboard',
+  })
+  getDashboard(@CurrentUser() user: JwtUser) {
+    return this.livestockDashboardService.getLivestockDashboard(user);
+  }
+
+  /**
    * Get herd statistics (count by species and status).
    *
    * GET /api/v1/livestock/dashboard/herd-stats
@@ -627,7 +658,7 @@ export class LivestockController {
     },
   })
   async getHerdStatistics(@CurrentUser() user: JwtUser) {
-    return this.livestockService.getHerdStatistics(user);
+    return this.livestockDashboardService.getHerdStatistics(user);
   }
 
   /**
@@ -641,7 +672,7 @@ export class LivestockController {
     description: 'Recent illnesses, missed treatments, upcoming vaccinations.',
   })
   async getDashboardHealthAlerts(@CurrentUser() user: JwtUser) {
-    return this.livestockService.getHealthAlerts(user);
+    return this.livestockDashboardService.getHealthAlerts(user);
   }
 
   // UTILITY ENDPOINTS

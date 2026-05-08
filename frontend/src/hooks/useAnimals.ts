@@ -5,6 +5,7 @@ export function useAnimals(filters?: {
   species?: string
   status?: string
   page?: number
+  limit?: number
 }) {
   return useQuery({
     queryKey: ['animals', filters],
@@ -64,7 +65,7 @@ export function useChangeAnimalStatus() {
     }: {
       id: string
       status: string
-      reason: string
+      reason?: string
     }) => livestockSerivce.changeStatus(id, status, reason),
     onSuccess: (updated) => {
       queryClient.invalidateQueries({ queryKey: ['animals'] })

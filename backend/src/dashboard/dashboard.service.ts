@@ -1,76 +1,88 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { CropStage, Role } from 'generated/prisma/enums';
+import dayjs from 'dayjs';
 
+import { PrismaService } from '@/prisma/prisma.service';
 import { CacheService } from '@/cache/cache.service';
+import { FieldsService } from '@/fields/fields.service';
+import { UpdatesService } from '@/updates/updates.service';
 import { AppConfig } from '@/config/configuration';
 import { JwtUser } from '@/auth/types/request-user.type';
-import { DashboardSummariesService } from './services/dashboard-summaries.services';
-import { AgentQueriesService } from './services/agent-queries.services';
+import { FieldStatus } from '@/fields/types/field-status.types';
 
 @Injectable()
 export class DashboardService {
   private readonly logger = new Logger(DashboardService.name);
 
   constructor(
+    private readonly prisma: PrismaService,
     private readonly cache: CacheService,
-    private readonly dashboardSummariesService: DashboardSummariesService,
-    private readonly agentQueriesService: AgentQueriesService,
+    private readonly fieldsService: FieldsService,
+    private readonly updatesService: UpdatesService,
     private readonly config: ConfigService<AppConfig, true>,
   ) {}
 
   async getAdminDashboard(user: JwtUser) {
-    const farmId = user.farmId;
-    const cacheKey = this.cache.dashboardKey(`admin:${farmId}`);
-
+    const cacheKey = this.cache.dashboardKey(`admin:${user.farmId}`);
     const cached = await this.cache.get(cacheKey);
     if (cached) {
       this.logger.debug('Admin dashboard served from cache');
-      const result = cached as string;
-      return result;
+      return cached;
     }
 
-    const data = await this.buildAdminDashboard(farmId);
+    const data = await this.buildAdminDashboard(user);
 
     await this.cache.set(
       cacheKey,
-      JSON.stringify(data),
+      data,
       this.config.get('cache.ttlDashboard', { infer: true }),
     );
 
     return data;
   }
 
-  async buildAdminDashboard(farmId: string) {
+  async buildAdminDashboard(user: JwtUser) {
     const [
-      fieldsSummary,
-      herdSummary,
-      inventorySummary,
-      tasksSummary,
-      healthAlerts,
-      recentActivity,
+      totalFields,
+      statusCounts,
+      recentUpdates,
+      atRiskFields,
+      stageBreakdown,
+      activeAgents,
     ] = await Promise.all([
-      this.dashboardSummariesService.getFieldsSummary(farmId),
-      this.dashboardSummariesService.getHerdSummary(farmId),
-      this.dashboardSummariesService.getInventorySummary(farmId),
-      this.dashboardSummariesService.getTasksSummary(farmId),
-      this.dashboardSummariesService.getHealthAlerts(farmId),
-      this.dashboardSummariesService.getRecentActivity(farmId),
+      this.prisma.field.count({
+        where: { farmId: user.farmId, isArchived: false },
+      }),
+
+      this.fieldsService.countByStatus(user.farmId),
+
+      this.updatesService.findRecent(user.farmId, 10),
+
+      this.getAtRiskFields(user.farmId),
+
+      this.getStageBreakdown(user.farmId),
+
+      this.prisma.user.count({
+        where: {
+          farmId: user.farmId,
+          role: Role.AGENT,
+          isActive: true,
+          assignedFields: { some: { isArchived: false } },
+        },
+      }),
     ]);
 
     return {
-      farmId,
-      timestamp: new Date().toISOString(),
       summary: {
-        fields: fieldsSummary,
-        herd: herdSummary,
-        inventory: inventorySummary,
-        tasks: tasksSummary,
+        totalFields,
+        activeAgents,
+        byStatus: statusCounts,
+        byStage: stageBreakdown,
       },
-      alerts: {
-        healthAlerts,
-      },
-      recentActivity,
-      generatedAt: new Date(),
+      atRiskFields,
+      recentUpdates,
+      generatedAt: new Date().toISOString(),
     };
   }
 
@@ -79,15 +91,14 @@ export class DashboardService {
     const cached = await this.cache.get(cacheKey);
     if (cached) {
       this.logger.debug(`Agent dashboard for ${user.id} served from cache`);
-      const result = cached as string;
-      return result;
+      return cached;
     }
 
     const data = await this.buildAgentDashboard(user);
 
     await this.cache.set(
       cacheKey,
-      JSON.stringify(data),
+      data,
       this.config.get('cache.ttlDashboard', { infer: true }),
     );
 
@@ -96,48 +107,120 @@ export class DashboardService {
 
   async buildAgentDashboard(user: JwtUser) {
     const agentId = user.id;
-    const farmId = user.farmId;
+    // const atRiskThreshold = this.config.get('fieldStatus.atRiskThresholdDays', {
+    //   infer: true,
+    // });
 
-    const [
-      assignedFields,
-      assignedAnimals,
-      myTasks,
-      fieldUpdatesNeeded,
-      healthChecksNeeded,
-    ] = await Promise.all([
-      this.agentQueriesService.getAssignedFields(agentId, farmId),
-      this.agentQueriesService.getAssignedAnimals(agentId, farmId),
-      this.agentQueriesService.getMyTasks(agentId, farmId),
-      this.agentQueriesService.getFieldUpdatesNeeded(agentId, farmId),
-      this.agentQueriesService.getHealthChecksNeeded(agentId, farmId),
+    const [assignedFields, recentUpdates] = await Promise.all([
+      this.prisma.field.findMany({
+        where: { farmId: user.farmId, agentId, isArchived: false },
+        select: {
+          id: true,
+          name: true,
+          cropType: true,
+          currentStage: true,
+          lastUpdatedAt: true,
+          plantingDate: true,
+          coverImageUrl: true,
+          location: {
+            select: { county: true, subCounty: true },
+          },
+        },
+        orderBy: { lastUpdatedAt: 'desc' },
+      }),
+
+      this.prisma.fieldUpdate.findMany({
+        where: { agentId },
+        take: 5,
+        orderBy: { observedAt: 'desc' },
+        select: {
+          id: true,
+          stage: true,
+          notes: true,
+          observedAt: true,
+          field: { select: { id: true, name: true } },
+        },
+      }),
     ]);
 
+    const fieldsWithStatus = assignedFields.map((f) => ({
+      ...f,
+      status: this.fieldsService.computeStatus(f),
+    }));
+
+    const statusCounts = fieldsWithStatus.reduce(
+      (acc, f) => {
+        acc[f.status] = (acc[f.status] ?? 0) + 1;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
+
+    const attention = fieldsWithStatus
+      .filter((f) => f.status === FieldStatus.AT_RISK)
+      .slice(0, 5);
+
     return {
-      userId: agentId,
-      farmId: farmId,
-      timestamp: new Date().toISOString(),
-      myWork: {
-        assignedFields,
-        assignedAnimals,
-        tasks: myTasks,
+      summary: {
+        totalAssigned: assignedFields.length,
+        byStatus: statusCounts,
       },
-      actionRequired: {
-        fieldUpdatesNeeded,
-        healthChecksNeeded,
-      },
-      generatedAt: new Date(),
+      attentionRequired: attention,
+      assignedFields: fieldsWithStatus,
+      recentActivity: recentUpdates,
+      generatedAt: new Date().toISOString(),
     };
   }
 
-  async invalidateAdminDashboard(farmId: string) {
-    const cacheKey = this.cache.dashboardKey(`admin:${farmId}`);
-    await this.cache.del(cacheKey);
-    this.logger.debug(`[farmId=${farmId}] Admin dashboard cache invalidated`);
+  private async getAtRiskFields(farmId: string) {
+    const threshold = this.config.get('fieldStatus.atRiskThresholdDays', {
+      infer: true,
+    });
+    const cutoff = dayjs().subtract(threshold, 'day').toDate();
+
+    return this.prisma.field.findMany({
+      where: {
+        farmId,
+        isArchived: false,
+        currentStage: { not: CropStage.HARVESTED },
+        OR: [{ lastUpdatedAt: null }, { lastUpdatedAt: { lt: cutoff } }],
+      },
+      select: {
+        id: true,
+        name: true,
+        cropType: true,
+        currentStage: true,
+        lastUpdatedAt: true,
+        plantingDate: true,
+        agent: { select: { id: true, fullName: true, email: true } },
+        location: { select: { county: true, subCounty: true } },
+      },
+      orderBy: { lastUpdatedAt: 'asc' },
+      take: 20,
+    });
   }
 
-  async invalidateAgentDashboard(agentId: string) {
-    const cacheKey = this.cache.dashboardKey(`agent:${agentId}`);
-    await this.cache.del(cacheKey);
-    this.logger.debug(`[agentId=${agentId}] Agent dashboard cache invalidated`);
+  private async getStageBreakdown(
+    farmId: string,
+  ): Promise<Record<CropStage, number>> {
+    const counts = await this.prisma.field.groupBy({
+      by: ['currentStage'],
+      where: { farmId, isArchived: false },
+      _count: { id: true },
+    });
+
+    const result = Object.values(CropStage).reduce(
+      (acc, stage) => {
+        acc[stage] = 0;
+        return acc;
+      },
+      {} as Record<CropStage, number>,
+    );
+
+    for (const row of counts) {
+      result[row.currentStage] = row._count.id;
+    }
+
+    return result;
   }
 }

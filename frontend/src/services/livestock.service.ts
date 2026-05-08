@@ -3,12 +3,17 @@ import type {
   Animal,
   AnimalIdentity,
   AnimalProfile,
+  AnimalSex,
   BreedingEvent,
+  BreedingStatus,
   HealthAlerts,
   HerdStats,
   MedicalRecord,
+  MedicalRecordStatus,
+  MedicalRecordType,
   Mortality,
   PaginatedResponse,
+  Species,
 } from '@/types/api.types'
 
 export const livestockSerivce = {
@@ -38,7 +43,7 @@ export const livestockSerivce = {
   async changeStatus(
     id: string,
     status: string,
-    reason: string,
+    reason?: string,
   ): Promise<Animal> {
     const { data } = await apiClient.patch(`/livestock/animals/${id}/status`, {
       status,
@@ -81,6 +86,15 @@ export const livestockSerivce = {
     )
     return response
   },
+  async getFullMedicalHistory(
+    params?: MedicalRecordsParams,
+  ): Promise<PaginatedResponse<MedicalRecord>> {
+    const { data } = await apiClient.get(`/livestock/animals/medical`, {
+      params,
+    })
+    return data
+  },
+
   async getMedicalHistory(animalId: string): Promise<MedicalRecord[]> {
     const { data } = await apiClient.get(
       `/livestock/animals/${animalId}/medical`,
@@ -159,6 +173,14 @@ export const livestockSerivce = {
         details,
       },
     )
+    return data
+  },
+  async getBreedingEvents(params: {
+    status?: BreedingStatus
+    page?: number
+    limit?: number
+  }): Promise<PaginatedResponse<BreedingEvent>> {
+    const { data } = await apiClient.get('/livestock/breeding', { params })
     return data
   },
   async getParentage(
@@ -247,9 +269,9 @@ export const livestockSerivce = {
 
 export interface RegisterAnimalInput {
   name?: string
-  species: string
+  species: Species
   breed?: string
-  sex: string
+  sex: AnimalSex
   dateOfBirth?: string
   acquiredDate?: string
   color?: string
@@ -280,10 +302,17 @@ export interface AnimalListParams {
   sortBy?: string
 }
 
-export interface RecordMedicalInput {
-  type: string
-  title: string
+export interface MedicalRecordsParams {
   status?: string
+  type?: string
+  page?: number
+  limit?: number
+}
+
+export interface RecordMedicalInput {
+  type: MedicalRecordType
+  title: string
+  status?: MedicalRecordStatus
   description?: string
   diagnosis?: string
   treatment?: string

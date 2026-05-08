@@ -1,24 +1,24 @@
-import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import type { CropStage } from "@/types/api.types";
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
+import type { CropStage } from '@/types/api.types'
 
 export interface QueuedUpdate {
-  id: string;
-  fieldId: string;
-  stage: CropStage;
-  notes?: string;
-  imageUrl?: string;
-  observedAt: string;
-  retries: number;
-  createdAt: string;
+  id: string
+  fieldId: string
+  stage: CropStage
+  notes?: string
+  imageUrl?: string
+  observedAt: string
+  retries: number
+  createdAt: string
 }
 
 interface OfflineQueueState {
-  queue: QueuedUpdate[];
-  addToQueue: (u: Omit<QueuedUpdate, "id" | "retries" | "createdAt">) => void;
-  removeFromQueue: (id: string) => void;
-  bumpRetry: (id: string) => void;
-  clear: () => void;
+  queue: QueuedUpdate[]
+  addToQueue: (u: Omit<QueuedUpdate, 'id' | 'retries' | 'createdAt'>) => void
+  removeFromQueue: (id: string) => void
+  bumpRetry: (id: string) => void
+  clear: () => void
 }
 
 export const useOfflineQueueStore = create<OfflineQueueState>()(
@@ -32,7 +32,7 @@ export const useOfflineQueueStore = create<OfflineQueueState>()(
             {
               ...u,
               id:
-                typeof crypto !== "undefined" && "randomUUID" in crypto
+                typeof crypto !== 'undefined' && 'randomUUID' in crypto
                   ? crypto.randomUUID()
                   : `q-${Date.now()}-${Math.random()}`,
               retries: 0,
@@ -50,6 +50,6 @@ export const useOfflineQueueStore = create<OfflineQueueState>()(
         })),
       clear: () => set({ queue: [] }),
     }),
-    { name: "smartseason-offline-queue" },
+    { name: 'farmcore-offline-queue' },
   ),
-);
+)
