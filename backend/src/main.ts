@@ -51,12 +51,16 @@ async function bootstrap() {
         { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
         'supabase-jwt',
       )
-      .addTag('Auth', 'Authentication endpoints')
       .addTag('Users', 'User management')
+      .addTag('Farms', 'Farm Management')
       .addTag('Fields', 'Field CRUD and assignment')
       .addTag('Updates', 'Field update submissions')
       .addTag('Dashboard', 'Aggregated analytics')
       .addTag('Images', 'Field image uploads')
+      .addTag('Livestock', 'Livestock Management')
+      .addTag('Feeds & Inventory', 'Feeds and inventory Management')
+      .addTag('Notifications', 'Notifications Management')
+      .addTag('Health', 'Health check')
       .build();
 
     const document = SwaggerModule.createDocument(app, swaggerConfig);

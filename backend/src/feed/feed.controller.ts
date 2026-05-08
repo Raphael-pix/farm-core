@@ -37,7 +37,7 @@ import { QueryConsumptionDto } from './dto/query-consumption.dto';
 import { AllocateFeedDto, BulkAllocateFeedDto } from './dto/allocate-feed.dto';
 import { FeedService } from './feed.service';
 
-@ApiTags('Feed & Inventory')
+@ApiTags('Feeds & Inventory')
 @ApiBearerAuth('supabase-jwt')
 @UseGuards(AppAuthGuard)
 @Controller({ path: 'feed', version: '1' })
